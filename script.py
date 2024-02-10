@@ -2,6 +2,61 @@ import csv
 import argparse
 from datetime import datetime
 
+class Fila:
+    def __init__(self, booking_date, value_date, payment_details, debit, credit, currency):
+        self.booking_date = booking_date
+        self.value_date = value_date
+        self.payment_details = payment_details
+        self.debit = debit
+        self.credit = credit
+        self.currency = currency
+        self.descripcion = None
+
+def procesar_fila_datos(fila, transacciones):
+    # Fila que comienza con una fecha (estructura similar a las filas de datos)
+    booking_date, value_date, payment_details, debit, credit, currency = fila
+
+    # Convertir Credit a número flotante
+    credit = float(credit.replace(',', '')) if credit else 0.0
+
+    # Modificar la línea de conversión de debit
+    if debit:
+        signo_posicion = debit.find('-')
+        if signo_posicion != -1:
+            parte_no_numerica = debit[:signo_posicion].strip()
+            parte_numerica = debit[signo_posicion:].replace(',', '')
+            debit = float(parte_numerica) if parte_numerica else 0.0
+            # Agregar la parte no numérica a payment_details
+            payment_details += parte_no_numerica
+        else:
+            # No hay signo "-", procesar como de costumbre
+            debit = float(debit.replace(',', ''))
+    else:
+        debit = 0.0
+
+    descripcion_actual = None  # Reiniciar la descripción
+
+    resultado = Fila(booking_date, value_date, payment_details, debit, credit, currency)
+
+    return resultado
+
+def procesar_fila_descripcion(fila, fila_append):
+    # Fila impar (estructura igual a la fila 3)
+    descripcion_actual = fila[0]
+    fila_append.descripcion = descripcion_actual
+    return fila_append
+
+def append_fila(fila, transacciones):
+    transacciones.append({
+            "Booking date": fila.booking_date,
+            "Value date": fila.value_date,
+            "Transaction Payment details": fila.payment_details,
+            "Debit": fila.debit,
+            "Credit": fila.credit,
+            "Currency": fila.currency,
+            "Description": fila.descripcion
+        })
+
 def procesar_csv(archivo_csv, archivo_salida):
     with open(archivo_csv, newline='', encoding='utf-8') as csv_file:
         csv_reader = csv.reader(csv_file)
@@ -15,54 +70,23 @@ def procesar_csv(archivo_csv, archivo_salida):
         # Inicializar variables para almacenar información
         transacciones = []
         descripcion_actual = None
+        tick = False
 
         for fila in csv_reader:
             if fila and fila[0].strip() and fila[0][0].isdigit():
-                # Fila que comienza con una fecha (estructura similar a las filas de datos)
-                booking_date, value_date, payment_details, debit, credit, currency = fila
-
-                # Convertir Credit a número flotante
-                credit = float(credit.replace(',', '')) if credit else 0.0
-
-                # Modificar la línea de conversión de debit
-                if debit:
-                    signo_posicion = debit.find('-')
-                    if signo_posicion != -1:
-                        parte_no_numerica = debit[:signo_posicion].strip()
-                        parte_numerica = debit[signo_posicion:].replace(',', '')
-                        debit = float(parte_numerica) if parte_numerica else 0.0
-                        # Agregar la parte no numérica a payment_details
-                        transacciones[-1]["Transaction Payment details"] += " " + parte_no_numerica
-                    else:
-                        # No hay signo "-", procesar como de costumbre
-                        debit = float(debit.replace(',', ''))
-                else:
-                    debit = 0.0
-
-                descripcion_actual = None  # Reiniciar la descripción
-
-                if payment_details.startswith("Balance of settlement"):
-                    transacciones.append({
-                        "Booking date": booking_date,
-                        "Value date": value_date,
-                        "Transaction Payment details": payment_details,
-                        "Debit": debit,
-                        "Credit": credit,
-                        "Currency": currency,
-                        "Description": payment_details,
-                    })
+                # Si no hubo Descripcion en la fila anterior
+                if tick == True:
+                    # Asigno payment_details como Descripcion
+                    fila_append.descripcion = fila_append.payment_details
+                    # y persisto
+                    append_fila(fila_append, transacciones)
+                tick = True
+                fila_append = Fila(*fila)
+                fila_append = procesar_fila_datos(fila, transacciones)
             else:
-                # Fila impar (estructura igual a la fila 3)
-                descripcion_actual = fila[0]
-                transacciones.append({
-                            "Booking date": booking_date,
-                            "Value date": value_date,
-                            "Transaction Payment details": payment_details,
-                            "Debit": debit,
-                            "Credit": credit,
-                            "Currency": currency,
-                            "Description": descripcion_actual  # Asociar la descripción actual
-                        })
+                tick = False
+                fila_append = procesar_fila_descripcion(fila, fila_append)
+                append_fila(fila_append, transacciones)
 
         # Procesar la información almacenada
         for transaccion in transacciones:

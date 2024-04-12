@@ -85,7 +85,7 @@ def escribir_csv(transacciones, archivo_salida):
 def escribir_en_postgres(transacciones, host, port, database, user, password):
         try:
             # Establecer conexión con la base de datos
-            conexion = psycopg.connect(host='localhost', port=5432, dbname='Banks', user='sebas', password='Sebas', connect_timeout=10)
+            conexion = psycopg.connect(host='localhost', port=5432, dbname='Banks', user='postgres', password='postgres', connect_timeout=10)
 
             # Crear un cursor para ejecutar consultas SQL
             cursor = conexion.cursor()
@@ -173,7 +173,7 @@ def procesar_csv(archivo_csv, archivo_salida):
         escribir_csv(transacciones, archivo_salida)
 
         # Persistir transacciones en DB
-        escribir_en_postgres(transacciones, 'localhost', 5432, 'Banks', 'sebas', 'Sebas')
+        escribir_en_postgres(transacciones, 'localhost', 5432, 'Banks', 'postgres', 'postgres')
 
 def main():
     # Configurar el argumento de línea de comandos para el archivo de entrada

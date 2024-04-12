@@ -1,2 +1,9 @@
 Si debit > 0, payment_details empieza con "Payment Details"
 A MENOS QUE SEA CARGO BANCARIO (Balance of settlement items QM)
+
+Linux:
+Iniciar postgres:
+sudo systemctl start postgresql
+
+Chequear postgres:
+sudo systemctl status postgresql 

@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Leer la contraseña desde la variable de entorno
-password="$GASTOS_DB_PASSWORD"
+# password="$GASTOS_DB_PASSWORD"
+password=$(cat config/config.json | jq -r ".password")
 
 # Verificar si la contraseña está vacía
 if [ -z "$password" ]; then
@@ -10,7 +11,7 @@ if [ -z "$password" ]; then
 fi
 
 # Ejecutar el script para crear el usuario y la DB
-PGPASSWORD="$password" psql -U postgres -w -f setup_db.sql
+psql -U postgres -f config/setup_db.sql
 
 # Ejecutar el script para crear la tabla de transacciones
-PGPASSWORD="$password" psql -U gastos_user -d gastos_db -w -f crear_tabla_transacciones.sql
+psql -U postgres -d gastos_db -f config/crear_tabla_transacciones.sql

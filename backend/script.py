@@ -85,14 +85,14 @@ def escribir_csv(transacciones, archivo_salida):
 def escribir_en_postgres(transacciones, host, port, database, user, password):
         try:
             # Establecer conexión con la base de datos
-            conexion = psycopg.connect(host='localhost', port=5432, dbname='Banks', user='postgres', password='postgres', connect_timeout=10)
+            conexion = psycopg.connect(host='localhost', port=5432, dbname='gastos_db', user='postgres', password='postgres', connect_timeout=10)
 
             # Crear un cursor para ejecutar consultas SQL
             cursor = conexion.cursor()
 
             # Definir la consulta SQL para insertar datos en la tabla
             sql_insert = """
-            INSERT INTO transactions ("booking_date", "value_date", "transaction_payment_details", "debit", "credit", "currency", "description")
+            INSERT INTO transacciones ("booking_date", "value_date", "transaction_payment_details", "debit", "credit", "currency", "description_text")
             VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
 
